@@ -92,14 +92,21 @@ Each layer has a constructor-injected seam, so tests stub upstream dependencies.
 | `new WeatherRequest("   ")` | `IllegalArgumentException` |
 | `new WeatherRequest(" Wrocław ")` | service is called with `"Wrocław"` (trim verified) |
 
+### AWS evidence
+
+The Lambda accepts `city` as an input parameter from the start (Tasks 1 and 2 share one codebase). The Task 1 demo invokes it with `{"city": "Wrocław"}`.
+
+- [Lambda created in AWS](doc/task1/lambda-created.png)
+- [Test execution with response](doc/task1/test-execution.png)
+
 ## Task 2 — City as input parameter
 
 The Lambda now accepts the city name as an input parameter (`{"city": "..."}`) and returns the current temperature for that city.
 
 Sample test events:
 
-- [City 1 — <city-name>](<screenshot-link>)
-- [City 2 — <city-name>](<screenshot-link>)
+- [London](doc/task2/london.png)
+- [New York](doc/task2/new-york.png)
 
 ## Task 3 — Lambda Function URL
 
@@ -116,8 +123,10 @@ GET https://ymh73ss7bbtimx6xyjdraxaz4i0mfjzv.lambda-url.eu-north-1.on.aws/?city=
 
 Sample requests and responses:
 
-- [City 1 — <city-name>](<screenshot-link>)
-- [City 2 — <city-name>](<screenshot-link>)
+- [Function URL configuration in AWS Console](doc/task3/function-url.png)
+- [Berlin](doc/task3/berlin.png)
+- [Minsk](doc/task3/minsk.png)
+- [City not found (404)](doc/task3/not-found.png)
 
 ## Task 4 — Design reflection
 
