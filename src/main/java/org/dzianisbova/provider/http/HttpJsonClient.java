@@ -25,27 +25,35 @@ public class HttpJsonClient {
     }
 
     public JsonNode getJson(String url) {
+        HttpResponse<String> response = send(url);
+        ensureSuccessful(response, url);
+        return parseBody(response, url);
+    }
+
+    private HttpResponse<String> send(String url) {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .timeout(REQUEST_TIMEOUT)
                 .GET()
                 .build();
-
-        HttpResponse<String> response;
         try {
-            response = httpClient.send(request, ofString());
+            return httpClient.send(request, ofString());
         } catch (IOException e) {
             throw new ExternalApiException("Failed to fetch json from: " + url, e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new ExternalApiException("Interrupted while fetching json from: " + url, e);
         }
+    }
 
+    private void ensureSuccessful(HttpResponse<String> response, String url) {
         if (response.statusCode() != 200) {
             throw new ExternalApiException(
                     "Request failed with status code: " + response.statusCode() + ": " + url);
         }
+    }
 
+    private JsonNode parseBody(HttpResponse<String> response, String url) {
         try {
             return objectMapper.readTree(response.body());
         } catch (IOException e) {
