@@ -107,6 +107,7 @@ Sample test events:
 
 - [London](doc/task2/london.png)
 - [New York](doc/task2/new-york.png)
+- [City not found (404)](doc/task2/not-found.png)
 
 ## Task 3 — Lambda Function URL
 
