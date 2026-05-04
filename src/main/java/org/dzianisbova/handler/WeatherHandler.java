@@ -7,6 +7,7 @@ import org.dzianisbova.model.WeatherRequest;
 import org.dzianisbova.model.WeatherResponse;
 import org.dzianisbova.provider.WeatherProvider;
 import org.dzianisbova.provider.http.HttpJsonClient;
+import org.dzianisbova.provider.openmeteo.OpenMeteoConfig;
 import org.dzianisbova.provider.openmeteo.OpenMeteoWeatherProvider;
 import org.dzianisbova.service.TemperatureClassifier;
 import org.dzianisbova.service.WeatherService;
@@ -22,7 +23,7 @@ public class WeatherHandler implements RequestHandler<WeatherRequest, WeatherRes
                 .connectTimeout(Duration.ofSeconds(3))
                 .build();
         HttpJsonClient httpJsonClient = new HttpJsonClient(httpClient, new ObjectMapper());
-        WeatherProvider weatherProvider = new OpenMeteoWeatherProvider(httpJsonClient);
+        WeatherProvider weatherProvider = new OpenMeteoWeatherProvider(httpJsonClient, OpenMeteoConfig.load());
         TemperatureClassifier classifier = new TemperatureClassifier();
 
         this.weatherService = new WeatherService(weatherProvider, classifier);

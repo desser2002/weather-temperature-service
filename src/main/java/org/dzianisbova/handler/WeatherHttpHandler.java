@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.dzianisbova.model.WeatherResponse;
 import org.dzianisbova.provider.WeatherProvider;
 import org.dzianisbova.provider.http.HttpJsonClient;
+import org.dzianisbova.provider.openmeteo.OpenMeteoConfig;
 import org.dzianisbova.provider.openmeteo.OpenMeteoWeatherProvider;
 import org.dzianisbova.service.TemperatureClassifier;
 import org.dzianisbova.service.WeatherService;
@@ -19,6 +20,7 @@ import java.util.Map;
 
 public class WeatherHttpHandler implements RequestHandler<APIGatewayV2HTTPEvent, APIGatewayV2HTTPResponse> {
     private static final String CITY_PARAM = "city";
+    private static final String ERROR_FIELD = "error";
 
     private final WeatherService weatherService;
     private final ObjectMapper objectMapper;
@@ -34,7 +36,7 @@ public class WeatherHttpHandler implements RequestHandler<APIGatewayV2HTTPEvent,
                 .connectTimeout(Duration.ofSeconds(3))
                 .build();
         HttpJsonClient httpJsonClient = new HttpJsonClient(httpClient, mapper);
-        WeatherProvider weatherProvider = new OpenMeteoWeatherProvider(httpJsonClient);
+        WeatherProvider weatherProvider = new OpenMeteoWeatherProvider(httpJsonClient, OpenMeteoConfig.load());
         TemperatureClassifier classifier = new TemperatureClassifier();
 
         this.weatherService = new WeatherService(weatherProvider, classifier);
@@ -50,17 +52,17 @@ public class WeatherHttpHandler implements RequestHandler<APIGatewayV2HTTPEvent,
         }
 
         if (city == null || city.isEmpty()) {
-            return buildResponse(400, Map.of("error", "Missing required query parameter: " + CITY_PARAM));
+            return buildResponse(400, Map.of(ERROR_FIELD, "Missing required query parameter: " + CITY_PARAM));
         }
 
         try {
             WeatherResponse weather = weatherService.getWeather(city);
             return buildResponse(200, weather);
         } catch (IllegalArgumentException e) {
-            return buildResponse(404, Map.of("error", e.getMessage()));
+            return buildResponse(404, Map.of(ERROR_FIELD, e.getMessage()));
         } catch (Exception e) {
             context.getLogger().log("Unexpected error: " + e);
-            return buildResponse(500, Map.of("error", "Internal server error"));
+            return buildResponse(500, Map.of(ERROR_FIELD, "Internal server error"));
         }
     }
 

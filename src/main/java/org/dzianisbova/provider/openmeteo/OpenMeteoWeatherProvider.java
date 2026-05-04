@@ -9,14 +9,20 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
 public class OpenMeteoWeatherProvider implements WeatherProvider {
-    private static final String GEOCODING_URL = "https://geocoding-api.open-meteo.com/v1/search?name=%s&count=1";
-    private static final String FORECAST_URL =   "https://api.open-meteo.com/v1/forecast?latitude=%s&longitude=%s&current=temperature_2m";
-
+    private static final String FIELD_RESULTS = "results";
+    private static final String FIELD_LATITUDE = "latitude";
+    private static final String FIELD_LONGITUDE = "longitude";
+    private static final String FIELD_CURRENT = "current";
+    private static final String FIELD_TEMPERATURE_2M = "temperature_2m";
 
     private final HttpJsonClient httpClient;
+    private final String geocodingUrl;
+    private final String forecastUrl;
 
-    public OpenMeteoWeatherProvider(HttpJsonClient httpClient) {
+    public OpenMeteoWeatherProvider(HttpJsonClient httpClient, OpenMeteoConfig config) {
         this.httpClient = httpClient;
+        this.geocodingUrl = config.geocodingUrl();
+        this.forecastUrl = config.forecastUrl();
     }
 
     @Override
@@ -27,18 +33,18 @@ public class OpenMeteoWeatherProvider implements WeatherProvider {
 
     private Coordinates findCoordinates(String city) {
         String encodedCity = URLEncoder.encode(city, StandardCharsets.UTF_8);
-        String url = GEOCODING_URL.formatted(encodedCity);
+        String url = geocodingUrl.formatted(encodedCity);
 
         JsonNode root = httpClient.getJson(url);
-        JsonNode result = root.get("results");
+        JsonNode result = root.get(FIELD_RESULTS);
 
         if (result == null || result.isEmpty()) {
             throw new IllegalArgumentException("City not found: " + city);
         }
 
         JsonNode first = result.get(0);
-        JsonNode latitude = first.get("latitude");
-        JsonNode longitude = first.get("longitude");
+        JsonNode latitude = first.get(FIELD_LATITUDE);
+        JsonNode longitude = first.get(FIELD_LONGITUDE);
 
         if (latitude == null || longitude == null) {
             throw new ExternalApiException("Coordinates not available in response from: " + url);
@@ -48,16 +54,16 @@ public class OpenMeteoWeatherProvider implements WeatherProvider {
     }
 
     private double fetchTemperatureByCoordinates(Coordinates cords) {
-        String url = FORECAST_URL.formatted(cords.latitude, cords.longitude);
+        String url = forecastUrl.formatted(cords.latitude, cords.longitude);
 
         JsonNode root = httpClient.getJson(url);
-        JsonNode current = root.get("current");
+        JsonNode current = root.get(FIELD_CURRENT);
 
-        if (current == null || current.get("temperature_2m") == null) {
+        if (current == null || current.get(FIELD_TEMPERATURE_2M) == null) {
             throw new ExternalApiException("Temperature not available in response from: " + url);
         }
 
-        return current.get("temperature_2m").asDouble();
+        return current.get(FIELD_TEMPERATURE_2M).asDouble();
     }
 
     record Coordinates(double latitude, double longitude) {
